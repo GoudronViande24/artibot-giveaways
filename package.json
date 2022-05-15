@@ -1,0 +1,31 @@
+{
+  "name": "artibot-giveaways",
+  "version": "2.2.0",
+  "description": "Make customizable giveaways on Discord",
+  "main": "index.js",
+	"type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GoudronViande24/artibot-giveaways.git"
+  },
+  "keywords": [
+    "artibot",
+    "giveaways",
+    "discord",
+    "bot",
+    "module",
+    "artivain"
+  ],
+  "author": "GoudronViande24",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GoudronViande24/artibot-giveaways/issues"
+  },
+  "homepage": "https://github.com/GoudronViande24/artibot-giveaways#readme",
+  "dependencies": {
+    "artibot": "^3.0.6"
+  }
+}
