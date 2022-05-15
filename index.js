@@ -126,9 +126,20 @@ export default ({ config: { lang } }) => {
 								option
 									.setName("option")
 									.setDescription(localizer._("What to edit in the giveaway?"))
-									.addChoice(localizer._("How much people will win the prize"), "winnerCount")
-									.addChoice(localizer._("Prize to win"), "prize")
-									.addChoice(localizer._("Add time"), "time")
+									.addChoices([
+										{
+											name: localizer._("How much people will win the prize"),
+											value: "winnerCount"
+										},
+										{
+											name: localizer._("Prize to win"),
+											value: "prize"
+										},
+										{
+											name: localizer._("Add time"),
+											value: "time"
+										}
+									])
 									.setRequired(true)
 							)
 							.addStringOption(option =>
