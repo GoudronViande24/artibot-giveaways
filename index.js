@@ -181,7 +181,7 @@ let manager;
  * Initialize the giveaway system on bot startup
  * @param {Artibot} artibot
  */
-async function initFunction({ log, config }) {
+async function initFunction({ log, config, client }) {
 	// Verify that the data directory exists
 	if (!fs.existsSync(path.resolve(__dirname, "data", "giveaways.json"))) {
 		if (!fs.existsSync(path.resolve(__dirname, "data"))) {
