@@ -183,10 +183,10 @@ let manager;
  */
 async function initFunction({ log, config, client }) {
 	// Verify that the data directory exists
-	if (!fs.existsSync(path.resolve(__dirname, "data", "giveaways.json"))) {
-		if (!fs.existsSync(path.resolve(__dirname, "data"))) {
+	if (!fs.existsSync("./data/giveaways/giveaways.json")) {
+		if (!fs.existsSync("./data/giveaways")) {
 			log("Giveaways", localizer._("Creating the directory to store the data"));
-			fs.mkdirSync(path.resolve(__dirname, "data"));
+			fs.mkdirSync("./data/giveaways", { recursive: true });
 		};
 	};
 
