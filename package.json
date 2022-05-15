@@ -3,7 +3,7 @@
   "version": "2.2.0",
   "description": "Make customizable giveaways on Discord",
   "main": "index.js",
-	"type": "module",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/GoudronViande24/artibot-giveaways#readme",
   "dependencies": {
-    "artibot": "^3.0.6"
+    "artibot": "^3.0.6",
+    "ms": "^2.1.3"
   }
 }
