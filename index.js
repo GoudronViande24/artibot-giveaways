@@ -23,7 +23,7 @@ const { version } = require('./package.json');
  * @param {Artibot} artibot
  * @returns {Module}
  */
-export default ({ config: lang }) => {
+export default ({ config: { lang } }) => {
 	localizer.setLocale(lang);
 
 	return new Module({
