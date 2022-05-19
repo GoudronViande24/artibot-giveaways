@@ -1,6 +1,6 @@
 {
   "name": "artibot-giveaways",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Make customizable giveaways on Discord",
   "main": "index.js",
   "type": "module",
