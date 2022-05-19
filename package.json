@@ -26,7 +26,8 @@
   },
   "homepage": "https://github.com/GoudronViande24/artibot-giveaways#readme",
   "dependencies": {
-    "artibot": "^3.0.6",
+    "artibot": "^3.0.8",
+    "discord-giveaways": "^5.1.1",
     "ms": "^2.1.3"
   }
 }
