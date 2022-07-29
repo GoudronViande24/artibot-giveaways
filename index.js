@@ -1,10 +1,9 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import Artibot, { Module, SlashCommand } from "artibot";
 import Localizer from "artibot-localizer";
 import { GiveawaysManager } from "discord-giveaways";
 import * as fs from "fs";
 import ms from "ms";
-import { CommandInteraction, Permissions } from "discord.js";
+import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -222,7 +221,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (!giveaway) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("Giveaway not found."));
 
@@ -239,7 +238,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (!isAdmin && !isGiveawayOwner) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions or be the host of the giveaway."));
 
@@ -253,7 +252,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (giveaway.ended) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("The giveaway is already ended."));
 
@@ -271,7 +270,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				.setDescription(localizer._("The giveaway has been ended successfully."));
 		}).catch(() => {
 			return createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("An error occured."));
 		});
@@ -287,7 +286,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (!giveaway) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("Giveaway not found."));
 
@@ -304,7 +303,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (!isAdmin && !isGiveawayOwner) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions or be the host of the giveaway."));
 
@@ -318,7 +317,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (giveaway.ended) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("Cannot edit an ended giveaway."));
 
@@ -338,7 +337,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				var settings = { newWinnerCount: parseInt(value) };
 			} else {
 				const errorEmbed = createEmbed()
-					.setColor("RED")
+					.setColor("Red")
 					.setTitle("Giveaways")
 					.setDescription(localizer._("Entered value is invalid."));
 
@@ -360,7 +359,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 			 */
 			if (!ms(value)) {
 				const errorEmbed = createEmbed()
-					.setColor("RED")
+					.setColor("Red")
 					.setTitle("Giveaways")
 					.setDescription(localizer.__("`[[0]]` is not a valid duration.", { placeholders: [duration] }));
 
@@ -381,7 +380,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				.setDescription(localizer._("The giveaway has been edited."));
 		}).catch(() => {
 			return createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("An error occured."));
 		});
@@ -397,7 +396,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (!giveaway) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("Giveaway not found."));
 
@@ -414,7 +413,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (!isAdmin && !isGiveawayOwner) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions or be the host of the giveaway."));
 
@@ -438,7 +437,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				.setDescription(localizer._("Giveaway has been rerolled."));
 		}).catch(() => {
 			return createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("An error occured."));
 		});
@@ -457,7 +456,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (!interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) && isSameGuild) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions."));
 
@@ -497,7 +496,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 		 */
 		if (!ms(duration) || ms(duration) < 1) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer.__("`[[0]]` is not a valid duration.", { placeholders: [duration] }));
 
@@ -515,7 +514,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 		 */
 		if (!winnerCount || winnerCount < 1) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("You must have at least one winner!"));
 
@@ -566,7 +565,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 
 		if (!interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) && isSameGuild) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions."));
 
@@ -605,7 +604,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 		 */
 		if (!winnerCount || winnerCount < 1) {
 			const errorEmbed = createEmbed()
-				.setColor("RED")
+				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("You must have at least one winner!"));
 

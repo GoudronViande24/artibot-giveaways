@@ -1,6 +1,6 @@
 {
   "name": "artibot-giveaways",
-  "version": "2.2.1",
+  "version": "3.0.0",
   "description": "Make customizable giveaways on Discord",
   "main": "index.js",
   "type": "module",
@@ -26,8 +26,8 @@
   },
   "homepage": "https://github.com/GoudronViande24/artibot-giveaways#readme",
   "dependencies": {
-    "artibot": "^3.0.8",
-    "discord-giveaways": "^5.1.1",
+    "artibot": "^4.0.0",
+    "discord-giveaways": "^6.0.0",
     "ms": "^2.1.3"
   }
 }
