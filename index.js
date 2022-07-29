@@ -3,7 +3,7 @@ import Localizer from "artibot-localizer";
 import { GiveawaysManager } from "discord-giveaways";
 import * as fs from "fs";
 import ms from "ms";
-import { CommandInteraction, SlashCommandBuilder, GatewayIntentBits } from "discord.js";
+import { CommandInteraction, SlashCommandBuilder, GatewayIntentBits, PermissionsBitField } from "discord.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -237,7 +237,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 		}
 
 		const isGiveawayOwner = giveaway.hostedBy.slice(0, -1).substring(2) == interaction.member.id;
-		const isAdmin = interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR);
+		const isAdmin = interaction.member.permissions.has(PermissionsBitField.Flags.Administrator);
 
 		if (!isAdmin && !isGiveawayOwner) {
 			const errorEmbed = createEmbed()
@@ -302,7 +302,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 		}
 
 		const isGiveawayOwner = giveaway.hostedBy.slice(0, -1).substring(2) == interaction.member.id;
-		const isAdmin = interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR);
+		const isAdmin = interaction.member.permissions.has(PermissionsBitField.Flags.Administrator);
 
 		if (!isAdmin && !isGiveawayOwner) {
 			const errorEmbed = createEmbed()
@@ -412,7 +412,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 		}
 
 		const isGiveawayOwner = giveaway.hostedBy.slice(0, -1).substring(2) == interaction.member.id;
-		const isAdmin = interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR);
+		const isAdmin = interaction.member.permissions.has(PermissionsBitField.Flags.Administrator);
 
 		if (!isAdmin && !isGiveawayOwner) {
 			const errorEmbed = createEmbed()
@@ -457,7 +457,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 			var isSameGuild = true;
 		}
 
-		if (!interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) && isSameGuild) {
+		if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && isSameGuild) {
 			const errorEmbed = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
@@ -566,7 +566,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 			var isSameGuild = true;
 		}
 
-		if (!interaction.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) && isSameGuild) {
+		if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && isSameGuild) {
 			const errorEmbed = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
