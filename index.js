@@ -30,6 +30,7 @@ export default ({ config: { lang } }) => {
 		name: "Giveaways",
 		version,
 		repo: "GoudronViande24/artibot-giveaways",
+		packageName: "artibot-giveaways",
 		langs: [
 			"en",
 			"fr"
