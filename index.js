@@ -3,7 +3,7 @@ import Localizer from "artibot-localizer";
 import { GiveawaysManager } from "discord-giveaways";
 import * as fs from "fs";
 import ms from "ms";
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { CommandInteraction, SlashCommandBuilder, GatewayIntentBits } from "discord.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -33,6 +33,9 @@ export default ({ config: { lang } }) => {
 		langs: [
 			"en",
 			"fr"
+		],
+		intents: [
+			GatewayIntentBits.GuildMessageReactions
 		],
 		parts: [
 			new SlashCommand({
