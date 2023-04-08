@@ -1,9 +1,9 @@
-import Artibot, { Module, SlashCommand } from "artibot";
+import Artibot, { Module, SlashCommand, log } from "artibot";
 import Localizer from "artibot-localizer";
-import { GiveawaysManager } from "discord-giveaways";
+import { Giveaway, GiveawayEditOptions, GiveawaysManager } from "discord-giveaways";
 import * as fs from "fs";
 import ms from "ms";
-import { CommandInteraction, SlashCommandBuilder, GatewayIntentBits, PermissionsBitField } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, GatewayIntentBits, PermissionsBitField, EmbedBuilder, GuildTextBasedChannel, User } from "discord.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -13,16 +13,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const require = createRequire(import.meta.url);
-const { version } = require('./package.json');
+const { version } = require('../package.json');
 
 /**
  * Giveaway module based on discord-giveaways by androz2091
  * @author GoudronViande24
  * @license MIT
- * @param {Artibot} artibot
- * @returns {Module}
  */
-export default ({ config: { lang } }) => {
+export default ({ config: { lang } }: Artibot): Module => {
 	localizer.setLocale(lang);
 
 	return new Module({
@@ -65,6 +63,7 @@ export default ({ config: { lang } }) => {
 									.setName("winners")
 									.setDescription(localizer._("How much people will win the prize"))
 									.setRequired(true)
+									.setMinValue(1)
 							)
 							.addUserOption(option =>
 								option
@@ -92,6 +91,7 @@ export default ({ config: { lang } }) => {
 									.setName("winners")
 									.setDescription(localizer._("How much people will win the prize"))
 									.setRequired(true)
+									.setMinValue(1)
 							)
 							.addUserOption(option =>
 								option
@@ -170,21 +170,15 @@ export default ({ config: { lang } }) => {
 	});
 }
 
-const localizer = new Localizer({
-	filePath: path.join(__dirname, "locales.json")
+const localizer: Localizer = new Localizer({
+	filePath: path.join(__dirname, "../locales.json")
 });
 
-/**
- * Giveaway manager
- * @type {GiveawaysManager}
- */
-let manager;
+/** Giveaway manager */
+let manager: GiveawaysManager;
 
-/**
- * Initialize the giveaway system on bot startup
- * @param {Artibot} artibot
- */
-async function initFunction({ log, config, client }) {
+/** Initialize the giveaway system on bot startup */
+async function initFunction({ config, client }: Artibot): Promise<void> {
 	// Verify that the data directory exists
 	if (!fs.existsSync("./data/giveaways/giveaways.json")) {
 		if (!fs.existsSync("./data/giveaways")) {
@@ -194,7 +188,7 @@ async function initFunction({ log, config, client }) {
 	};
 
 	// Karens are gonna ask for this
-	manager = new GiveawaysManager(client, {
+	manager = new GiveawaysManager(client!, {
 		storage: "./data/giveaways/giveaways.json",
 		default: {
 			botsCanWin: false,
@@ -207,24 +201,21 @@ async function initFunction({ log, config, client }) {
 	log("Giveaways", localizer._("Ready."));
 }
 
-/**
- * Handle the slash commands
- * @param {CommandInteraction}
- * @param {Artibot} artibot
- */
-async function mainFunction(interaction, { config, createEmbed }) {
-	const command = interaction.options.getSubcommand();
+/** Handle the slash commands */
+async function mainFunction(interaction: ChatInputCommandInteraction<"cached">, { config, createEmbed }: Artibot): Promise<void> {
+	const command: string = interaction.options.getSubcommand(true);
+	const embed: EmbedBuilder = createEmbed().setTitle("Giveaways");
 
 	// ########################################
 	// End subcommand
 	// ########################################
 
 	if (command == "end") {
-		const messageId = interaction.options.getString("id");
-		const giveaway = manager.giveaways.find((g) => g.guildId === interaction.guildId && g.messageId === messageId);
+		const messageId: string = interaction.options.getString("id", true);
+		const giveaway: Giveaway | undefined = manager.giveaways.find((g) => g.guildId === interaction.guildId && g.messageId === messageId);
 
 		if (!giveaway) {
-			const errorEmbed = createEmbed()
+			const errorEmbed: EmbedBuilder = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("Giveaway not found."));
@@ -234,14 +225,11 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
-		const isGiveawayOwner = giveaway.hostedBy.slice(0, -1).substring(2) == interaction.member.id;
-		const isAdmin = interaction.member.permissions.has(PermissionsBitField.Flags.Administrator);
-
-		if (!isAdmin && !isGiveawayOwner) {
-			const errorEmbed = createEmbed()
+		if (!hasPerms(giveaway, interaction)) {
+			const errorEmbed: EmbedBuilder = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions or be the host of the giveaway."));
@@ -251,11 +239,11 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
 		if (giveaway.ended) {
-			const errorEmbed = createEmbed()
+			const errorEmbed: EmbedBuilder = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("The giveaway is already ended."));
@@ -265,19 +253,17 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
-		var embed = await manager.end(messageId).then(() => {
-			return createEmbed()
-				.setTitle("Giveaways")
-				.setDescription(localizer._("The giveaway has been ended successfully."));
-		}).catch(() => {
-			return createEmbed()
+		try {
+			await manager.end(messageId);
+			embed.setDescription(localizer._("The giveaway has been ended successfully."));
+		} catch (e) {
+			embed
 				.setColor("Red")
-				.setTitle("Giveaways")
 				.setDescription(localizer._("An error occured."));
-		});
+		}
 	}
 
 	// ########################################
@@ -285,11 +271,11 @@ async function mainFunction(interaction, { config, createEmbed }) {
 	// ########################################
 
 	if (command == "edit") {
-		const messageId = interaction.options.getString("id");
-		const giveaway = manager.giveaways.find((g) => g.guildId === interaction.guildId && g.messageId === messageId);
+		const messageId: string = interaction.options.getString("id", true);
+		const giveaway: Giveaway | undefined = manager.giveaways.find((g) => g.guildId === interaction.guildId && g.messageId === messageId);
 
 		if (!giveaway) {
-			const errorEmbed = createEmbed()
+			const errorEmbed: EmbedBuilder = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("Giveaway not found."));
@@ -299,14 +285,11 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
-		const isGiveawayOwner = giveaway.hostedBy.slice(0, -1).substring(2) == interaction.member.id;
-		const isAdmin = interaction.member.permissions.has(PermissionsBitField.Flags.Administrator);
-
-		if (!isAdmin && !isGiveawayOwner) {
-			const errorEmbed = createEmbed()
+		if (!hasPerms(giveaway, interaction)) {
+			const errorEmbed: EmbedBuilder = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions or be the host of the giveaway."));
@@ -316,11 +299,11 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
 		if (giveaway.ended) {
-			const errorEmbed = createEmbed()
+			const errorEmbed: EmbedBuilder = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("Cannot edit an ended giveaway."));
@@ -330,64 +313,63 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
-		const option = interaction.options.getString("option");
-		const value = interaction.options.getString("value");
+		const option: string = interaction.options.getString("option", true);
+		const value: string = interaction.options.getString("value", true);
 
-		if (option == "winnerCount") {
-			if (!isNaN(value) && parseInt(value) > 0) {
-				var settings = { newWinnerCount: parseInt(value) };
-			} else {
-				const errorEmbed = createEmbed()
-					.setColor("Red")
-					.setTitle("Giveaways")
-					.setDescription(localizer._("Entered value is invalid."));
+		const settings: GiveawayEditOptions<any> = {};
 
-				await interaction.reply({
-					embeds: [errorEmbed],
-					ephemeral: true
-				});
+		switch (option) {
+			case "winnerCount":
+				if (!isNaN(parseInt(value)) && parseInt(value) > 0) {
+					settings.newWinnerCount = parseInt(value);
+				} else {
+					const errorEmbed: EmbedBuilder = createEmbed()
+						.setColor("Red")
+						.setTitle("Giveaways")
+						.setDescription(localizer._("Entered value is invalid."));
+					await interaction.reply({
+						embeds: [errorEmbed],
+						ephemeral: true
+					});
+					return;
+				}
+				break;
 
-				return
-			}
+			case "prize":
+				settings.newPrize = value;
+				break;
+
+			case "time":
+				/**
+				 * Check if duration is valid
+				 * @since 2.1.1
+				 */
+				if (!ms(value)) {
+					const errorEmbed = createEmbed()
+						.setColor("Red")
+						.setTitle("Giveaways")
+						.setDescription(localizer.__("`[[0]]` is not a valid duration.", { placeholders: [value] }));
+					await interaction.reply({
+						embeds: [errorEmbed],
+						ephemeral: true
+					});
+					return;
+				}
+				settings.addTime = ms(value);
+				break;
 		}
 
-		if (option == "prize") var settings = { newPrize: value };
-
-		if (option == "time") {
-			/**
-			 * Check if duration is valid
-			 * @since 2.1.1
-			 */
-			if (!ms(value)) {
-				const errorEmbed = createEmbed()
-					.setColor("Red")
-					.setTitle("Giveaways")
-					.setDescription(localizer.__("`[[0]]` is not a valid duration.", { placeholders: [duration] }));
-
-				await interaction.reply({
-					embeds: [errorEmbed],
-					ephemeral: true
-				});
-
-				return
-			}
-
-			var settings = { addTime: ms(value) };
-		}
-
-		var embed = await manager.edit(messageId, settings).then(() => {
-			return createEmbed()
-				.setTitle("Giveaways")
-				.setDescription(localizer._("The giveaway has been edited."));
-		}).catch(() => {
-			return createEmbed()
+		try {
+			await manager.edit(messageId, settings);
+			embed.setDescription(localizer._("The giveaway has been edited."));
+		} catch (e) {
+			embed
 				.setColor("Red")
-				.setTitle("Giveaways")
 				.setDescription(localizer._("An error occured."));
-		});
+		}
 	}
 
 	// ########################################
@@ -395,8 +377,8 @@ async function mainFunction(interaction, { config, createEmbed }) {
 	// ########################################
 
 	if (command == "reroll") {
-		const messageId = interaction.options.getString("id");
-		const giveaway = manager.giveaways.find((g) => g.guildId === interaction.guildId && g.messageId === messageId);
+		const messageId: string = interaction.options.getString("id", true);
+		const giveaway: Giveaway | undefined = manager.giveaways.find((g) => g.guildId === interaction.guildId && g.messageId === messageId);
 
 		if (!giveaway) {
 			const errorEmbed = createEmbed()
@@ -409,13 +391,10 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
-		const isGiveawayOwner = giveaway.hostedBy.slice(0, -1).substring(2) == interaction.member.id;
-		const isAdmin = interaction.member.permissions.has(PermissionsBitField.Flags.Administrator);
-
-		if (!isAdmin && !isGiveawayOwner) {
+		if (!hasPerms(giveaway, interaction)) {
 			const errorEmbed = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
@@ -426,25 +405,23 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
-		var embed = await manager.reroll(messageId, {
-			winnerCount: 1,
-			messages: {
-				congrat: localizer._("Congratulations, {winners}! 🎉\nYou just won **{this.prize}**!"),
-				error: localizer._("No valid entry, impossible to choose a new winner for **{this.prize}**.")
-			}
-		}).then(() => {
-			return createEmbed()
-				.setTitle("Giveaways")
-				.setDescription(localizer._("Giveaway has been rerolled."));
-		}).catch(() => {
-			return createEmbed()
+		try {
+			await manager.reroll(messageId, {
+				winnerCount: 1,
+				messages: {
+					congrat: localizer._("Congratulations, {winners}! 🎉\nYou just won **{this.prize}**!"),
+					error: localizer._("No valid entry, impossible to choose a new winner for **{this.prize}**.")
+				}
+			});
+			embed.setDescription(localizer._("Giveaway has been rerolled."));
+		} catch (e) {
+			embed
 				.setColor("Red")
-				.setTitle("Giveaways")
 				.setDescription(localizer._("An error occured."));
-		});
+		}
 	}
 
 	// ########################################
@@ -452,14 +429,16 @@ async function mainFunction(interaction, { config, createEmbed }) {
 	// ########################################
 
 	if (command == "create") {
+		let isSameGuild: boolean;
+
 		if (interaction.options.getChannel("channel")) {
-			var isSameGuild = interaction.channel.guild.id == interaction.options.getChannel("channel").guild.id;
+			isSameGuild = interaction.channel!.guild.id == interaction.options.getChannel("channel")!.guild.id;
 		} else {
-			var isSameGuild = true;
+			isSameGuild = true;
 		}
 
 		if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && isSameGuild) {
-			const errorEmbed = createEmbed()
+			const errorEmbed: EmbedBuilder = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions."));
@@ -469,30 +448,14 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
-		const duration = interaction.options.getString("duration"),
-			winnerCount = interaction.options.getInteger('winners'),
-			prize = interaction.options.getString('prize');
-
-		if (interaction.options.getChannel("channel")) {
-			var channel = interaction.options.getChannel("channel");
-			if (channel.type !== "GUILD_TEXT") {
-				return interaction.reply({
-					content: localizer._("Impossible to create a giveaway in this channel."),
-					ephemeral: true
-				});
-			}
-		} else {
-			var channel = interaction.channel;
-		}
-
-		if (interaction.options.getUser("host")) {
-			var hostedBy = interaction.options.getUser("host");
-		} else {
-			var hostedBy = interaction.member.user;
-		}
+		const duration: string = interaction.options.getString("duration", true);
+		const winnerCount: number = interaction.options.getInteger('winners', true);
+		const prize: string = interaction.options.getString('prize', true);
+		const channel: GuildTextBasedChannel = interaction.options.getChannel("channel") || interaction.channel!;
+		const hostedBy: User = interaction.options.getUser("host") || interaction.member.user;
 
 		/**
 		 * Check if duration is valid
@@ -509,25 +472,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
-		}
-
-		/**
-		 * Check if there is at least one winner
-		 * @since 2.1.1
-		 */
-		if (!winnerCount || winnerCount < 1) {
-			const errorEmbed = createEmbed()
-				.setColor("Red")
-				.setTitle("Giveaways")
-				.setDescription(localizer._("You must have at least one winner!"));
-
-			await interaction.reply({
-				embeds: [errorEmbed],
-				ephemeral: true
-			});
-
-			return
+			return;
 		}
 
 		await manager.start(channel, {
@@ -551,9 +496,7 @@ async function mainFunction(interaction, { config, createEmbed }) {
 			}
 		});
 
-		var embed = createEmbed()
-			.setTitle("Giveaways")
-			.setDescription(localizer._("The giveaway has been created!"));
+		embed.setDescription(localizer._("The giveaway has been created!"));
 	}
 
 	// ########################################
@@ -561,14 +504,15 @@ async function mainFunction(interaction, { config, createEmbed }) {
 	// ########################################
 
 	if (command == "create-drop") {
+		let isSameGuild: boolean;
 		if (interaction.options.getChannel("channel")) {
-			var isSameGuild = interaction.channel.guild.id == interaction.options.getChannel("channel").guild.id;
+			isSameGuild = interaction.channel!.guild.id == interaction.options.getChannel("channel")!.guild.id;
 		} else {
-			var isSameGuild = true;
+			isSameGuild = true;
 		}
 
 		if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && isSameGuild) {
-			const errorEmbed = createEmbed()
+			const errorEmbed: EmbedBuilder = createEmbed()
 				.setColor("Red")
 				.setTitle("Giveaways")
 				.setDescription(localizer._("**You cannot execute this command.**\nYou must have the administrator permissions."));
@@ -578,47 +522,13 @@ async function mainFunction(interaction, { config, createEmbed }) {
 				ephemeral: true
 			});
 
-			return
+			return;
 		}
 
-		const winnerCount = interaction.options.getInteger("winners"),
-			prize = interaction.options.getString("prize");
-
-		if (interaction.options.getChannel("channel")) {
-			var channel = interaction.options.getChannel("channel");
-			if (channel.type !== "GUILD_TEXT") {
-				return interaction.reply({
-					content: localizer._("Impossible to create a giveaway in this channel."),
-					ephemeral: true
-				});
-			}
-		} else {
-			var channel = interaction.channel;
-		}
-
-		if (interaction.options.getUser("host")) {
-			var hostedBy = interaction.options.getUser("host");
-		} else {
-			var hostedBy = interaction.member.user;
-		}
-
-		/**
-		 * Check if there is at least one winner
-		 * @since 2.1.1
-		 */
-		if (!winnerCount || winnerCount < 1) {
-			const errorEmbed = createEmbed()
-				.setColor("Red")
-				.setTitle("Giveaways")
-				.setDescription(localizer._("You must have at least one winner!"));
-
-			await interaction.reply({
-				embeds: [errorEmbed],
-				ephemeral: true
-			});
-
-			return
-		}
+		const winnerCount: number = interaction.options.getInteger("winners", true);
+		const prize: string = interaction.options.getString("prize", true);
+		const channel: GuildTextBasedChannel = interaction.options.getChannel("channel") || interaction.channel!;
+		const hostedBy: User = interaction.options.getUser("host") || interaction.member.user;
 
 		await manager.start(channel, {
 			duration: ms("1d"),
@@ -641,13 +551,18 @@ async function mainFunction(interaction, { config, createEmbed }) {
 			isDrop: true
 		});
 
-		var embed = createEmbed()
-			.setTitle("Giveaways")
-			.setDescription(localizer._("The drop has been started!"));
+		embed.setDescription(localizer._("The drop has been started!"));
 	}
 
 	await interaction.reply({
 		embeds: [embed],
 		ephemeral: true
 	});
+}
+
+function hasPerms(giveaway: Giveaway, interaction: ChatInputCommandInteraction<"cached">): boolean {
+	const isGiveawayOwner: boolean = giveaway.hostedBy!.id == interaction.member.id;
+	const isAdmin: boolean = interaction.member.permissions.has(PermissionsBitField.Flags.Administrator);
+
+	return isGiveawayOwner || isAdmin;
 }
